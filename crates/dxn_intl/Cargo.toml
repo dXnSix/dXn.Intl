@@ -1,0 +1,21 @@
+[package]
+name = "dxn_intl"
+description = "Locale-aware plurals, numbers and dates for Rust on ICU4X's CLDR data, independent of any UI framework"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "../../README.md"
+keywords = ["i18n", "intl", "plural", "number-format", "date-format"]
+categories = ["internationalization", "localization", "value-formatting"]
+
+[dependencies]
+fixed_decimal.workspace = true
+icu.workspace = true
+icu_provider.workspace = true
+icu_experimental.workspace = true
+
+[lints]
+workspace = true
