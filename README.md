@@ -2,6 +2,8 @@
 
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#license)
 
+**Documentation:** https://dxnsix.github.io/dXn.Intl/
+
 **Locale-aware plurals, numbers and dates for Rust**, on [ICU4X](https://icu4x.unicode.org)'s CLDR
 data, independent of any UI framework and building for `wasm32-unknown-unknown`. The formatting
 happens in Rust, so an app shows the same text on every platform, browser or not.
