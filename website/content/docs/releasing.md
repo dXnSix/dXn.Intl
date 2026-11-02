@@ -11,7 +11,7 @@ order: 100
 
 ```toml
 [dependencies]
-dxn_intl = { git = "https://github.com/dXnSix/dXn.Intl", tag = "v0.1.0" }
+dxn_intl = { git = "https://github.com/dXnSix/dXn.Intl", tag = "v0.1.1" }
 ```
 
 `Cargo.lock` records the tagged commit. To upgrade, change the tag to a newer one from the [Releases page](https://github.com/dXnSix/dXn.Intl/releases); Cargo resolves it on the next build. Release tags are never moved or deleted, so a bad release is fixed forward with a new patch release.

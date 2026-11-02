@@ -21,7 +21,7 @@ happens in Rust, so an app shows the same text on every platform, browser or not
 
 ```toml
 [dependencies]
-dxn_intl = { git = "https://github.com/dXnSix/dXn.Intl", tag = "v0.1.0" }
+dxn_intl = { git = "https://github.com/dXnSix/dXn.Intl", tag = "v0.1.1" }
 ```
 
 ```rust

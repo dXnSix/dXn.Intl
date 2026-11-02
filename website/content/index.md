@@ -10,7 +10,7 @@ lede: >-
   server and a WebAssembly page print the same text.
 install: |-
   [dependencies]
-  dxn_intl = { git = "https://github.com/dXnSix/dXn.Intl", tag = "v0.1.0" }
+  dxn_intl = { git = "https://github.com/dXnSix/dXn.Intl", tag = "v0.1.1" }
 facts:
   - { label: Data, value: "ICU4X 2.4, CLDR compiled in" }
   - { label: Rust, value: "1.97+ (edition 2024)" }
