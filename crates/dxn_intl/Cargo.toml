@@ -16,6 +16,12 @@ fixed_decimal.workspace = true
 icu.workspace = true
 icu_provider.workspace = true
 icu_experimental.workspace = true
+jiff = { workspace = true, optional = true }
+
+[features]
+# Instants in IANA time zones (`DateTime::from_instant`, `DateTime::from_unix_millis_in`), on
+# jiff's copy of the time zone database.
+tz = ["dep:jiff"]
 
 [lints]
 workspace = true

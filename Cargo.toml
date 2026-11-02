@@ -18,6 +18,9 @@ icu_provider = "2.4.0"
 # Percent and currency formatting live in ICU4X's unstable crate: pinned exactly, since any
 # release may change its API.
 icu_experimental = "=0.7.0"
+# Time zones for the `tz` feature: the IANA database compiled in (`tzdb-bundle-always`), so no
+# system files are read and wasm32 gets the same zones.
+jiff = { version = "0.2.38", default-features = false, features = ["std", "tzdb-bundle-always"] }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

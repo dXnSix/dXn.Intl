@@ -14,8 +14,9 @@ use crate::{IntlError, Result};
 /// A date and time of day on the ISO (Gregorian) calendar, as a wall clock shows it: no time
 /// zone. A formatter shows it in the locale's own calendar (Buddhist in `th`, …).
 ///
-/// To show an instant, take its local time in the user's zone first, or use
-/// [`DateTime::from_unix_millis`] with the zone's offset at that instant.
+/// To show an instant, take its local time in the user's zone first: with the `tz` feature,
+/// [`DateTime::from_instant`] and [`DateTime::from_unix_millis_in`] do it for an IANA zone;
+/// without it, [`DateTime::from_unix_millis`] takes the zone's offset at that instant.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct DateTime {
     /// The year; `0` is 1 BCE.
@@ -74,6 +75,55 @@ impl DateTime {
             minute: (seconds / 60 % 60) as u8,
             second: (seconds % 60) as u8,
             nanosecond: (in_day % 1000) as u32 * 1_000_000,
+        })
+    }
+
+    /// The wall time in the IANA time zone `time_zone` (`"Europe/Zagreb"`) at `instant`, an
+    /// RFC 3339 timestamp with its offset (`"2026-11-02T09:30:00Z"`, as JavaScript's
+    /// `Date.toISOString()` writes one, or `"2026-11-02T10:30:00+01:00"`). Needs the `tz`
+    /// feature.
+    ///
+    /// ```
+    /// use dxn_intl::DateTime;
+    ///
+    /// let local = DateTime::from_instant("2026-11-02T09:30:00Z", "Europe/Zagreb")?;
+    /// assert_eq!((local.hour, local.minute), (10, 30));
+    /// # Ok::<(), dxn_intl::IntlError>(())
+    /// ```
+    #[cfg(feature = "tz")]
+    pub fn from_instant(instant: &str, time_zone: &str) -> Result<Self> {
+        let timestamp: jiff::Timestamp = instant.trim().parse().map_err(|error| {
+            IntlError::InvalidDateTime(format!("`{instant}` is no instant: {error}"))
+        })?;
+        Self::at(timestamp, time_zone)
+    }
+
+    /// The wall time in the IANA time zone `time_zone` `millis` milliseconds after
+    /// 1970-01-01T00:00:00Z (JavaScript's `Date.now()`, `date.getTime()`). Needs the `tz`
+    /// feature.
+    #[cfg(feature = "tz")]
+    pub fn from_unix_millis_in(millis: i64, time_zone: &str) -> Result<Self> {
+        let timestamp = jiff::Timestamp::from_millisecond(millis).map_err(|error| {
+            IntlError::InvalidDateTime(format!("{millis} ms is out of range: {error}"))
+        })?;
+        Self::at(timestamp, time_zone)
+    }
+
+    #[cfg(feature = "tz")]
+    fn at(timestamp: jiff::Timestamp, time_zone: &str) -> Result<Self> {
+        let zone = jiff::tz::TimeZone::get(time_zone).map_err(|error| {
+            IntlError::InvalidDateTime(format!("`{time_zone}` is no IANA time zone: {error}"))
+        })?;
+        let local = timestamp.to_zoned(zone).datetime();
+        // jiff's civil fields are in range by construction: years -9999..=9999, the rest small.
+        Ok(Self {
+            year: i32::from(local.year()),
+            month: local.month() as u8,
+            day: local.day() as u8,
+            hour: local.hour() as u8,
+            minute: local.minute() as u8,
+            second: local.second() as u8,
+            nanosecond: local.subsec_nanosecond() as u32,
         })
     }
 

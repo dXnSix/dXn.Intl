@@ -51,13 +51,15 @@ from finite floats (the shortest text that reads back as the same float). `Numbe
 gives the value as it will be shown (scaled, rounded, padded), which is the value plural selection
 should read: "1.0 items" takes the form for `1.0`.
 
-Dates are wall times on the ISO calendar (`DateTime`); there is no time zone database here. Take an
-instant's local time in the user's zone first, or use `DateTime::from_unix_millis` with the zone's
-offset.
+Dates are wall times on the ISO calendar (`DateTime`). For an instant, take its wall time in the
+user's zone first: with the `tz` feature (`features = ["tz"]`, which compiles in jiff's copy of the
+IANA time zone database), `DateTime::from_instant("2026-11-02T09:30:00Z", "Europe/Zagreb")` and
+`DateTime::from_unix_millis_in(millis, zone)` do it; without it, `DateTime::from_unix_millis` takes
+the zone's offset at that instant.
 
 ## What is left out
 
-Time zone names, relative times ("in 3 days"), lists, units, compact numbers and collation. ICU4X
+Time zone names in text, relative times ("in 3 days"), lists, units, compact numbers and collation. ICU4X
 has them; they come here when a consumer needs them.
 
 ## Development

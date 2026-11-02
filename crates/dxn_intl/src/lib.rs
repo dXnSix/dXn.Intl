@@ -5,7 +5,9 @@
 //! - [`PluralRules`]: a number's cardinal or ordinal [`PluralCategory`] in a locale.
 //! - [`NumberFormatter`]: decimal numbers, percentages and amounts of money, with digit,
 //!   grouping and sign options.
-//! - [`DateTimeFormatter`]: dates and times of day in the locale's calendar, words and clock.
+//! - [`DateTimeFormatter`]: dates and times of day in the locale's calendar, words and clock;
+//!   with the `tz` feature, [`DateTime::from_instant`] takes an instant's wall time in an IANA
+//!   time zone.
 //! - [`parse_locale`], [`negotiate`] and [`direction`]: reading a language tag, picking the
 //!   best available locale for a user's list, and the direction a locale is written in.
 //!
