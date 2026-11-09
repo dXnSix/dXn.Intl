@@ -20,6 +20,7 @@ mod error;
 mod locale;
 mod number;
 mod plural;
+mod unit;
 
 pub use compact::{CompactDisplay, CompactNumberFormatter};
 pub use datetime::{
@@ -30,6 +31,7 @@ pub use icu::locale::Locale;
 pub use locale::{Direction, direction, negotiate, parse_locale};
 pub use number::{Grouping, Number, NumberFormatter, NumberOptions, NumberStyle, SignDisplay};
 pub use plural::{PluralCategory, PluralKind, PluralRules};
+pub use unit::{UnitDisplay, UnitFormatter, UnitOptions};
 
 /// Runs the README's examples as doctests.
 #[cfg(doctest)]

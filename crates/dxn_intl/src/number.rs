@@ -195,19 +195,16 @@ impl NumberOptions {
             NumberStyle::Percent => 0,
             _ => 3,
         };
-        let min = self.minimum_fraction_digits.unwrap_or(0);
-        let max = self.maximum_fraction_digits.unwrap_or(default_max.max(min));
-        if min > max {
-            return Err(IntlError::InvalidOptions(format!(
-                "minimum fraction digits {min} is above the maximum {max}"
-            )));
-        }
-        if max > 100 || self.minimum_integer_digits > 100 {
+        if self.minimum_integer_digits > 100 {
             return Err(IntlError::InvalidOptions(
                 "more than 100 digits".to_string(),
             ));
         }
-        Ok((min, max))
+        fraction_digits(
+            self.minimum_fraction_digits,
+            self.maximum_fraction_digits,
+            default_max,
+        )
     }
 }
 
@@ -293,13 +290,7 @@ impl NumberFormatter {
         }
         // A currency formatter rounds to the currency's own digits.
         if !matches!(self.options.style, NumberStyle::Currency(_)) {
-            let (min, max) = self.fraction;
-            value.round_with_mode(
-                -i16::from(max),
-                SignedRoundingMode::Unsigned(UnsignedRoundingMode::HalfExpand),
-            );
-            value.absolute.trim_end();
-            value.absolute.pad_end(-i16::from(min));
+            round_fraction(&mut value, self.fraction);
         }
         value
             .absolute
@@ -323,6 +314,38 @@ impl NumberFormatter {
             Kind::Currency(formatter) => formatter.format_fixed_decimal(&value).to_string(),
         })
     }
+}
+
+/// Rounds `value`'s fraction, half away from zero, to at most `max` digits and pads it with
+/// zeros to at least `min`.
+pub(crate) fn round_fraction(value: &mut Decimal, (min, max): (u8, u8)) {
+    value.round_with_mode(
+        -i16::from(max),
+        SignedRoundingMode::Unsigned(UnsignedRoundingMode::HalfExpand),
+    );
+    value.absolute.trim_end();
+    value.absolute.pad_end(-i16::from(min));
+}
+
+/// The fraction digits options ask for, `default_max` when they set no maximum.
+pub(crate) fn fraction_digits(
+    minimum: Option<u8>,
+    maximum: Option<u8>,
+    default_max: u8,
+) -> Result<(u8, u8)> {
+    let min = minimum.unwrap_or(0);
+    let max = maximum.unwrap_or(default_max.max(min));
+    if min > max {
+        return Err(IntlError::InvalidOptions(format!(
+            "minimum fraction digits {min} is above the maximum {max}"
+        )));
+    }
+    if max > 100 {
+        return Err(IntlError::InvalidOptions(
+            "more than 100 digits".to_string(),
+        ));
+    }
+    Ok((min, max))
 }
 
 impl From<std::convert::Infallible> for IntlError {
