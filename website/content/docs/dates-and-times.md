@@ -218,10 +218,33 @@ The crate has no time zone database and no clock. The offset belongs to the zone
 To show a timestamp from last July, compute the offset for that July instant. Using today's offset shifts every date that falls on the other side of a daylight-saving change by an hour, and can move an event near midnight to the wrong day.
 :::
 
+## Ranges
+
+`DateRangeFormatter` takes the same `DateTimeOptions` and writes a range: both ends as `DateTimeFormatter` shows them, joined by the locale's range separator.
+
+```rust
+use dxn_intl::{DateRangeFormatter, DateTime, DateTimeOptions, Length, parse_locale};
+
+let start = DateTime::date(2026, 10, 27)?;
+let end = DateTime::date(2026, 10, 30)?;
+
+let en = DateRangeFormatter::new(&parse_locale("en-US")?, DateTimeOptions::date(Length::Medium))?;
+assert_eq!(en.format(&start, &end)?, "Oct 27, 2026\u{2009}–\u{2009}Oct 30, 2026");
+
+let ja = DateRangeFormatter::new(&parse_locale("ja")?, DateTimeOptions::date(Length::Medium))?;
+assert_eq!(ja.format(&start, &end)?, "2026/10/27～2026/10/30");
+
+// Ends the options do not tell apart are one value.
+assert_eq!(en.format(&start, &DateTime::new(2026, 10, 27, 18, 0, 0)?)?, "Oct 27, 2026");
+```
+
+The separator is the locale's own (`–` with thin spaces in English, `—` in Russian, `至` in Traditional Chinese, `تا` in Persian). The ends are always shown whole, as CLDR's fallback for ranges is, not with what they share shown once ("Oct 27 – 30, 2026"): ICU4X 2.4's range formatter leaves out the month and weekday names of some locales' range patterns.
+
 ## Reference
 
 | Item | Description |
 |---|---|
+| `DateRangeFormatter::new(&Locale, DateTimeOptions)`, `format(&DateTime, &DateTime) -> Result<String>` | A range; the errors are `DateTimeFormatter`'s. |
 | `DateTimeFormatter::new(&Locale, DateTimeOptions) -> Result<DateTimeFormatter>` | `InvalidOptions` for field combinations that cannot be shown; `Data` if the locale's data cannot load. |
 | `format(&DateTime) -> Result<String>` | `InvalidDateTime` when the value is outside the calendar. |
 | `DateFields` | `Day`, `MonthDay`, `YearMonthDay`, `DayWeekday`, `MonthDayWeekday`, `YearMonthDayWeekday`, `Weekday`, `Month`, `YearMonth`, `Year`. |

@@ -14,14 +14,11 @@ ICU4X has most of these; they are added when a consumer needs them.
 | Missing | Instead |
 |---|---|
 | Time zones: names ("CET"), offsets, conversion, daylight saving | Resolve the offset with a zone database and pass it to `DateTime::from_unix_millis`; see [Dates and times](./dates-and-times.md#time-zones) |
-| Relative times ("in 3 days", "yesterday") | Compare day numbers and use your own words; see [Cookbook](./cookbook.md#today-and-yesterday) |
-| Lists ("A, B and C") | Join with your translations, or use messages in [dXn.I18n](https://dxnsix.github.io/dXn.I18n/) |
-| Units ("5 km", "3 hours") | Format the number, add the unit from your translations |
-| Compact numbers ("1.2K"), scientific notation | Format the number and divide it yourself |
-| Collation (locale-aware sorting) | Not available |
+| Units other than length, area, volume, mass and duration (temperature, speed, digital storage) | Format the number, add the unit from your translations; see [Compact numbers and units](./compact-and-units.md#units) |
+| Scientific notation, durations ("1 hr, 30 min") | Format the parts and join them with a `ListFormatter` of `ListType::Unit` |
+| Date ranges with what the ends share shown once ("Oct 27 – 30") | `DateRangeFormatter` shows both ends whole; see [Dates and times](./dates-and-times.md#ranges) |
 | Parsing localized input ("1.234,5", "27.10.2026") | `Number` reads ASCII only; normalize the input first |
 | Date patterns and skeletons of your own, format to parts | Pick `DateFields`, `TimePrecision` and `Length` |
-| Date ranges ("Oct 27 – 29") | Format both ends and join |
 | Currency display styles (code, name, narrow symbol), accounting negatives | The locale's symbol is always used |
 | Plural currency names ("5 US dollars") | Use plural categories with your own words |
 | Rounding modes other than half away from zero; significant digits | Round the `Number` yourself before formatting |

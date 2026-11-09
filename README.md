@@ -4,16 +4,24 @@
 
 **Documentation:** https://dxnsix.github.io/dXn.Intl/
 
-**Locale-aware plurals, numbers and dates for Rust**, on [ICU4X](https://icu4x.unicode.org)'s CLDR
+**Locale-aware plurals, numbers, dates, lists, names and sorting for Rust**, on [ICU4X](https://icu4x.unicode.org)'s CLDR
 data, independent of any UI framework and building for `wasm32-unknown-unknown`. The formatting
 happens in Rust, so an app shows the same text on every platform, browser or not.
 
 - **Plurals**: a number's cardinal or ordinal category (`zero`, `one`, `two`, `few`, `many`,
   `other`) for every language CLDR has, reading the visible fraction digits (`1.0` is not `1`).
 - **Numbers**: decimal numbers, percentages and amounts of money in the locale's digits,
-  separators and patterns, with fraction digits, grouping and sign options.
+  separators and patterns, with fraction digits, grouping and sign options; compact notation
+  ("1.2K", "3.4 million"); amounts of units of length, area, volume, mass and duration ("5 km",
+  "3 hours").
 - **Dates and times**: the fields and length you ask for, in the locale's calendar, words, order
-  and clock, or a clock you choose.
+  and clock, or a clock you choose; ranges ("Oct 27, 2026 – Oct 30, 2026"); relative times ("in
+  3 days", "yesterday").
+- **Lists and names**: lists joined with the locale's words ("A, B, and C", "A or B"), and the
+  names of languages, regions, scripts and locales in the locale's language ("Croatian",
+  "Hrvatska", "English (Canada)").
+- **Sorting**: comparing and sorting text in the locale's alphabetical order (`č` after `c` in
+  Croatian), with sensitivity, numeric, case and punctuation options.
 - **Locales**: reading BCP 47 and POSIX tags, picking the best available locale for a user's
   preferred list, and a locale's writing direction.
 
@@ -46,6 +54,40 @@ assert_eq!(dates.format(&DateTime::date(2026, 10, 27)?)?, "27. Oktober 2026");
 # Ok::<(), dxn_intl::IntlError>(())
 ```
 
+```rust
+use dxn_intl::{
+    Collator, CollatorOptions, CompactDisplay, CompactNumberFormatter, DisplayNames,
+    DisplayNamesOptions, ListFormatter, ListStyle, ListType, RelativeTimeFormatter,
+    RelativeTimeOptions, RelativeTimeStyle, RelativeTimeUnit, UnitDisplay, UnitFormatter,
+    UnitOptions, parse_locale,
+};
+
+let en = parse_locale("en")?;
+assert_eq!(CompactNumberFormatter::new(&en, CompactDisplay::Short)?.format(1_250_000)?, "1.3M");
+assert_eq!(
+    UnitFormatter::new(&en, "mile", UnitOptions::new(UnitDisplay::Long))?.format(26.2)?,
+    "26.2 miles"
+);
+let days = RelativeTimeFormatter::new(
+    &en,
+    RelativeTimeUnit::Day,
+    RelativeTimeOptions::auto(RelativeTimeStyle::Long),
+)?;
+assert_eq!(days.format(-1)?, "yesterday");
+assert_eq!(
+    ListFormatter::new(&en, ListType::And, ListStyle::Long)?.format(["Ana", "Iva", "Marko"]),
+    "Ana, Iva, and Marko"
+);
+assert_eq!(
+    DisplayNames::new(&en, DisplayNamesOptions::default())?.region("HR").as_deref(),
+    Some("Croatia")
+);
+let mut towns = vec!["Čakovec", "Zagreb", "Cres"];
+Collator::new(&parse_locale("hr")?, CollatorOptions::default())?.sort(&mut towns);
+assert_eq!(towns, ["Cres", "Čakovec", "Zagreb"]);
+# Ok::<(), dxn_intl::IntlError>(())
+```
+
 Numbers are exact decimals (`Number`): made from integers, from text (`"1.50"` keeps its digits) or
 from finite floats (the shortest text that reads back as the same float). `NumberFormatter::resolve`
 gives the value as it will be shown (scaled, rounded, padded), which is the value plural selection
@@ -59,8 +101,15 @@ the zone's offset at that instant.
 
 ## What is left out
 
-Time zone names in text, relative times ("in 3 days"), lists, units, compact numbers and collation. ICU4X
-has them; they come here when a consumer needs them.
+- Time zone names in text, durations ("1 hr, 30 min") and parsing localized input.
+- Units other than length, area, volume, mass and duration (temperature, speed, digital
+  storage): ICU4X 0.7's unit data has no names for them. Some locales' long names of metric
+  units are their symbols there (`en`: "5 km" for "5 kilometers").
+- Date ranges show both ends whole ("Oct 27, 2026 – Oct 30, 2026"), CLDR's fallback for ranges,
+  not with what they share shown once ("Oct 27 – 30, 2026"): ICU4X 2.4's range formatter leaves
+  out the month and weekday names of some locales' range patterns.
+
+ICU4X has or will have these; they come here when a consumer needs them.
 
 ## Development
 

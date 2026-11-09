@@ -1,8 +1,9 @@
 # dXn.Intl contributor guidance
 
-Locale-aware plurals, numbers and dates for Rust (the `dxn_intl` crate in `crates/`), on ICU4X's
-CLDR data: plural rules for every language CLDR has, number formatting (decimal, percent,
-currency) and date and time formatting, all in Rust. What it offers is in `README.md`.
+Locale-aware plurals, numbers, dates, lists, names and sorting for Rust (the `dxn_intl` crate in
+`crates/`), on ICU4X's CLDR data: plural rules for every language CLDR has, number formatting
+(decimal, percent, currency, compact, units), date and time formatting (with ranges and relative
+times), lists, display names and collation, all in Rust. What it offers is in `README.md`.
 
 ## Boundaries
 
@@ -11,8 +12,10 @@ currency) and date and time formatting, all in Rust. What it offers is in `READM
   their glue lives in their own repositories.
 - It builds for `wasm32-unknown-unknown`: no threads, files, system locale or clock. The caller
   passes the locale and the local wall time; reading them from the platform is the framework's job.
-- Locale data is ICU4X's compiled data. `icu_experimental` (percent and currency) is pinned
-  exactly, since its API changes in any release; bump it on purpose and rerun every test.
+- Locale data is ICU4X's compiled data. `icu_experimental` (percent, currency, units, relative
+  time, display names) and the `unstable` features of `icu_decimal` (compact numbers) and
+  `icu_datetime` (range separators) are pinned exactly, since their API changes in any release;
+  bump them on purpose and rerun every test.
 - Public types are this crate's own; ICU4X types appear only where they are the natural
   vocabulary (`Locale`, and `Number::as_decimal`).
 
@@ -29,7 +32,9 @@ cargo package --workspace
 ```
 
 Tests are grouped by feature, one file per feature in `crates/dxn_intl/tests/` (`plurals`,
-`numbers`, `datetime`, `locales`; select one with `cargo test -p dxn_intl --test <feature>`). A new
+`numbers`, `compact`, `units`, `datetime`, `date_ranges`, `relative_time`, `time_zones`, `lists`,
+`display_names`, `collation`, `locales`; select one with `cargo test -p dxn_intl --test
+<feature>`). A new
 feature or behavior change gets a new group, or tests in the group of its feature. Test only what
 you changed while iterating, and run the full list above once before committing. Raw diagnostic
 output goes to the ignored `artifacts-temp/`, never into commits.

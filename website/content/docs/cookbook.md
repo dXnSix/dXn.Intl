@@ -112,38 +112,29 @@ Take the "current time" from your platform and pass it in: `SystemTime::now().du
 
 ## Today and yesterday
 
-The crate has no relative times, but "Today" and "Yesterday" for recent days are a comparison of day numbers. Convert both instants to the same zone's wall days, and fall back to a formatted date.
+"Today", "yesterday" and "in 3 days" are the difference of two day numbers in the user's zone, written by a `RelativeTimeFormatter` with the locale's words for nearby days.
 
 ```rust
-use dxn_intl::{DateTime, DateTimeFormatter, DateTimeOptions, IntlError, Length, parse_locale};
+use dxn_intl::{RelativeTimeFormatter, RelativeTimeOptions, RelativeTimeStyle, RelativeTimeUnit, parse_locale};
 
 /// Days since 1970-01-01 in the zone with this UTC offset.
 fn day_number(millis: i64, offset_seconds: i32) -> i64 {
     (millis + i64::from(offset_seconds) * 1000).div_euclid(86_400_000)
 }
 
-fn day_label(
-    now: i64,
-    then: i64,
-    offset_seconds: i32,
-    words: (&str, &str), // your translations of "Today" and "Yesterday"
-    dates: &DateTimeFormatter,
-) -> Result<String, IntlError> {
-    match day_number(now, offset_seconds) - day_number(then, offset_seconds) {
-        0 => Ok(words.0.to_string()),
-        1 => Ok(words.1.to_string()),
-        _ => dates.format(&DateTime::from_unix_millis(then, offset_seconds)?),
-    }
-}
-
-let dates = DateTimeFormatter::new(&parse_locale("en-US")?, DateTimeOptions::date(Length::Medium))?;
+let days = RelativeTimeFormatter::new(
+    &parse_locale("en-US")?,
+    RelativeTimeUnit::Day,
+    RelativeTimeOptions::auto(RelativeTimeStyle::Long),
+)?;
 let now = 1_793_112_330_000; // 2026-10-27T14:45:30Z
 let hour = 3_600_000;
-let words = ("Today", "Yesterday");
+let label = |then: i64| days.format(day_number(then, 3600) - day_number(now, 3600));
 
-assert_eq!(day_label(now, now - hour, 3600, words, &dates)?, "Today");
-assert_eq!(day_label(now, now - 24 * hour, 3600, words, &dates)?, "Yesterday");
-assert_eq!(day_label(now, now - 72 * hour, 3600, words, &dates)?, "Oct 24, 2026");
+assert_eq!(label(now - hour)?, "today");
+assert_eq!(label(now - 24 * hour)?, "yesterday");
+assert_eq!(label(now - 72 * hour)?, "3 days ago");
+assert_eq!(label(now + 48 * hour)?, "in 2 days");
 ```
 
 This works in a fixed offset. Across a daylight-saving change, compute each instant's own offset (see the previous recipe) and compare the day numbers of the resulting wall times.
