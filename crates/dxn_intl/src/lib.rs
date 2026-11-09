@@ -29,7 +29,8 @@ mod unit;
 pub use collation::{CaseFirst, Collator, CollatorOptions, Sensitivity};
 pub use compact::{CompactDisplay, CompactNumberFormatter};
 pub use datetime::{
-    DateFields, DateTime, DateTimeFormatter, DateTimeOptions, HourCycle, Length, TimePrecision,
+    DateFields, DateRangeFormatter, DateTime, DateTimeFormatter, DateTimeOptions, HourCycle,
+    Length, TimePrecision,
 };
 pub use display_names::{DisplayNameStyle, DisplayNames, DisplayNamesOptions};
 pub use error::{IntlError, Result};

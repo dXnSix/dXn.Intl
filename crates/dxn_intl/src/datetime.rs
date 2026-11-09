@@ -8,6 +8,7 @@ use icu::datetime::{DateTimeFormatter as IcuFormatter, DateTimeFormatterPreferen
 use icu::locale::Locale;
 use icu::locale::preferences::extensions::unicode::keywords::HourCycle as IcuHourCycle;
 use icu::time::Time;
+use icu_datetime::range::DateRangeFormatter as IcuRangeFormatter;
 
 use crate::{IntlError, Result};
 
@@ -321,9 +322,10 @@ pub struct DateTimeFormatter {
     formatter: IcuFormatter<CompositeDateTimeFieldSet>,
 }
 
-impl DateTimeFormatter {
-    /// A formatter for `locale` showing what `options` asks for.
-    pub fn new(locale: &Locale, options: DateTimeOptions) -> Result<Self> {
+impl DateTimeOptions {
+    /// ICU4X's field set for these options.
+    fn field_set(&self) -> Result<CompositeDateTimeFieldSet> {
+        let options = self;
         let mut builder = FieldSetBuilder::new();
         builder.length = Some(match options.length {
             Length::Short => IcuLength::Short,
@@ -336,18 +338,29 @@ impl DateTimeFormatter {
             TimePrecision::Minute => IcuTimePrecision::Minute,
             TimePrecision::Second => IcuTimePrecision::Second,
         });
-        let field_set = builder
+        builder
             .build_composite_datetime()
-            .map_err(|error| IntlError::InvalidOptions(format!("{error:?}")))?;
+            .map_err(|error| IntlError::InvalidOptions(format!("{error:?}")))
+    }
+
+    /// `locale`'s preferences with the options' clock.
+    fn preferences(&self, locale: &Locale) -> DateTimeFormatterPreferences {
         let mut prefs = DateTimeFormatterPreferences::from(locale);
-        if let Some(hour_cycle) = options.hour_cycle {
+        if let Some(hour_cycle) = self.hour_cycle {
             prefs.hour_cycle = Some(match hour_cycle {
                 HourCycle::H11 => IcuHourCycle::H11,
                 HourCycle::H12 => IcuHourCycle::H12,
                 HourCycle::H23 => IcuHourCycle::H23,
             });
         }
-        let formatter = IcuFormatter::try_new(prefs, field_set)
+        prefs
+    }
+}
+
+impl DateTimeFormatter {
+    /// A formatter for `locale` showing what `options` asks for.
+    pub fn new(locale: &Locale, options: DateTimeOptions) -> Result<Self> {
+        let formatter = IcuFormatter::try_new(options.preferences(locale), options.field_set()?)
             .map_err(|error| IntlError::Data(error.to_string()))?;
         Ok(Self { formatter })
     }
@@ -356,4 +369,83 @@ impl DateTimeFormatter {
     pub fn format(&self, value: &DateTime) -> Result<String> {
         Ok(self.formatter.format(&value.to_icu()?).to_string())
     }
+}
+
+/// Formats a range of dates and times of day: the two ends as [`DateTimeFormatter`] shows them,
+/// joined by the locale's range separator ("Oct 27, 2026 – Oct 30, 2026", "2026/10/27～2026/10/30");
+/// ends that show the same are one.
+///
+/// Both ends are shown whole, as CLDR's fallback for ranges is, rather than with what they share
+/// shown once ("Oct 27 – 30, 2026"): ICU4X 2.4's range formatter leaves out the month and weekday
+/// names of some locales' range patterns.
+///
+/// ```
+/// use dxn_intl::{DateRangeFormatter, DateTime, DateTimeOptions, Length, parse_locale};
+///
+/// let en = DateRangeFormatter::new(&parse_locale("en-US")?, DateTimeOptions::date(Length::Medium))?;
+/// let start = DateTime::date(2026, 10, 27)?;
+/// assert_eq!(
+///     en.format(&start, &DateTime::date(2026, 10, 30)?)?,
+///     "Oct 27, 2026\u{2009}–\u{2009}Oct 30, 2026"
+/// );
+/// // Ends the options do not tell apart are one.
+/// assert_eq!(en.format(&start, &DateTime::new(2026, 10, 27, 18, 0, 0)?)?, "Oct 27, 2026");
+///
+/// let ja = DateRangeFormatter::new(&parse_locale("ja")?, DateTimeOptions::date(Length::Medium))?;
+/// assert_eq!(ja.format(&start, &DateTime::date(2026, 10, 30)?)?, "2026/10/27～2026/10/30");
+/// # Ok::<(), dxn_intl::IntlError>(())
+/// ```
+#[derive(Debug)]
+pub struct DateRangeFormatter {
+    ends: DateTimeFormatter,
+    separator: String,
+}
+
+impl DateRangeFormatter {
+    /// A formatter for `locale` showing what `options` asks for at each end.
+    pub fn new(locale: &Locale, options: DateTimeOptions) -> Result<Self> {
+        Ok(Self {
+            ends: DateTimeFormatter::new(locale, options)?,
+            separator: range_separator(locale)?,
+        })
+    }
+
+    /// The range from `start` to `end`.
+    pub fn format(&self, start: &DateTime, end: &DateTime) -> Result<String> {
+        let start = self.ends.format(start)?;
+        let end = self.ends.format(end)?;
+        Ok(if start == end {
+            start
+        } else {
+            format!("{start}{}{end}", self.separator)
+        })
+    }
+}
+
+/// What the locale puts between the ends of a range, as its data has it: what ICU4X's range
+/// formatter puts between two numeric dates years apart, whose range pattern shows both whole
+/// (and needs no names, which its range formatter can leave out).
+fn range_separator(locale: &Locale) -> Result<String> {
+    const FALLBACK: &str = "\u{2009}–\u{2009}";
+    let options = DateTimeOptions::date(Length::Short);
+    let prefs = options.preferences(locale);
+    let field_set = options.field_set()?;
+    let single = IcuFormatter::try_new(prefs, field_set)
+        .map_err(|error| IntlError::Data(error.to_string()))?;
+    let Ok(range) = IcuRangeFormatter::try_new(prefs, field_set) else {
+        return Ok(FALLBACK.to_string());
+    };
+    let start = DateTime::date(2001, 2, 3)?.to_icu()?;
+    let end = DateTime::date(2004, 5, 6)?.to_icu()?;
+    let (start_text, end_text) = (
+        single.format(&start).to_string(),
+        single.format(&end).to_string(),
+    );
+    let text = range.format(&start, &end).to_string();
+    Ok(text
+        .strip_prefix(start_text.as_str())
+        .and_then(|rest| rest.strip_suffix(end_text.as_str()))
+        .filter(|separator| !separator.is_empty())
+        .unwrap_or(FALLBACK)
+        .to_string())
 }
