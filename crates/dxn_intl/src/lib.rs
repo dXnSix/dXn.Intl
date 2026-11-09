@@ -20,6 +20,7 @@ mod error;
 mod locale;
 mod number;
 mod plural;
+mod relative;
 mod unit;
 
 pub use compact::{CompactDisplay, CompactNumberFormatter};
@@ -31,6 +32,10 @@ pub use icu::locale::Locale;
 pub use locale::{Direction, direction, negotiate, parse_locale};
 pub use number::{Grouping, Number, NumberFormatter, NumberOptions, NumberStyle, SignDisplay};
 pub use plural::{PluralCategory, PluralKind, PluralRules};
+pub use relative::{
+    RelativeTimeFormatter, RelativeTimeNumeric, RelativeTimeOptions, RelativeTimeStyle,
+    RelativeTimeUnit,
+};
 pub use unit::{UnitDisplay, UnitFormatter, UnitOptions};
 
 /// Runs the README's examples as doctests.
