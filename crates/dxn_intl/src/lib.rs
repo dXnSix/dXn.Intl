@@ -14,6 +14,7 @@
 //! The locale data is compiled in (ICU4X's `compiled_data`); a program carries only the data
 //! of the formatters it uses.
 
+mod collation;
 mod compact;
 mod datetime;
 mod display_names;
@@ -25,6 +26,7 @@ mod plural;
 mod relative;
 mod unit;
 
+pub use collation::{CaseFirst, Collator, CollatorOptions, Sensitivity};
 pub use compact::{CompactDisplay, CompactNumberFormatter};
 pub use datetime::{
     DateFields, DateTime, DateTimeFormatter, DateTimeOptions, HourCycle, Length, TimePrecision,
