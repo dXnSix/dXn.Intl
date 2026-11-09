@@ -19,7 +19,7 @@ or in `Cargo.toml`:
 
 ```toml
 [dependencies]
-dxn_intl = { git = "https://github.com/dXnSix/dXn.Intl", tag = "v0.1.1" }
+dxn_intl = { git = "https://github.com/dXnSix/dXn.Intl", tag = "v0.1.2" }
 ```
 
 `Cargo.lock` records the tagged commit. To upgrade, change the tag; see [Releases](./releasing.md). The crate has no Cargo features and needs Rust **1.97** or newer (the library is edition 2024, and CI checks 1.97).
