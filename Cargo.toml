@@ -14,9 +14,13 @@ homepage = "https://github.com/dXnSix/dXn.Intl"
 # `ryu` reads floats as the shortest decimal that reads back the same.
 fixed_decimal = { version = "0.7.3", features = ["ryu"] }
 icu = "2.4.0"
+# Compact numbers (`icu_decimal`) and date ranges (`icu_datetime`) are behind ICU4X's `unstable`
+# features: pinned exactly, like `icu_experimental`, since their API may change in any release.
+icu_datetime = { version = "=2.4.0", features = ["unstable"] }
+icu_decimal = { version = "=2.4.0", features = ["unstable"] }
 icu_provider = "2.4.0"
-# Percent and currency formatting live in ICU4X's unstable crate: pinned exactly, since any
-# release may change its API.
+# Percent and currency formatting, units, relative time and display names live in ICU4X's
+# unstable crate: pinned exactly, since any release may change its API.
 icu_experimental = "=0.7.0"
 # Time zones for the `tz` feature: the IANA database compiled in (`tzdb-bundle-always`), so no
 # system files are read and wasm32 gets the same zones.

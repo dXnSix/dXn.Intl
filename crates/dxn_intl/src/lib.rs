@@ -14,12 +14,14 @@
 //! The locale data is compiled in (ICU4X's `compiled_data`); a program carries only the data
 //! of the formatters it uses.
 
+mod compact;
 mod datetime;
 mod error;
 mod locale;
 mod number;
 mod plural;
 
+pub use compact::{CompactDisplay, CompactNumberFormatter};
 pub use datetime::{
     DateFields, DateTime, DateTimeFormatter, DateTimeOptions, HourCycle, Length, TimePrecision,
 };
