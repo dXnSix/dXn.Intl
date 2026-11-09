@@ -17,6 +17,7 @@
 mod compact;
 mod datetime;
 mod error;
+mod list;
 mod locale;
 mod number;
 mod plural;
@@ -29,6 +30,7 @@ pub use datetime::{
 };
 pub use error::{IntlError, Result};
 pub use icu::locale::Locale;
+pub use list::{ListFormatter, ListStyle, ListType};
 pub use locale::{Direction, direction, negotiate, parse_locale};
 pub use number::{Grouping, Number, NumberFormatter, NumberOptions, NumberStyle, SignDisplay};
 pub use plural::{PluralCategory, PluralKind, PluralRules};
