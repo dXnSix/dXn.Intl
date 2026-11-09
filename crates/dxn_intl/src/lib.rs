@@ -16,6 +16,7 @@
 
 mod compact;
 mod datetime;
+mod display_names;
 mod error;
 mod list;
 mod locale;
@@ -28,6 +29,7 @@ pub use compact::{CompactDisplay, CompactNumberFormatter};
 pub use datetime::{
     DateFields, DateTime, DateTimeFormatter, DateTimeOptions, HourCycle, Length, TimePrecision,
 };
+pub use display_names::{DisplayNameStyle, DisplayNames, DisplayNamesOptions};
 pub use error::{IntlError, Result};
 pub use icu::locale::Locale;
 pub use list::{ListFormatter, ListStyle, ListType};
